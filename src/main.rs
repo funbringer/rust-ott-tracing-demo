@@ -65,7 +65,11 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[tracing::instrument]
+async fn kek() {}
+
+#[tracing::instrument]
 async fn do_work(job: &str) {
+    kek().await;
     tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 }
 
@@ -79,9 +83,11 @@ async fn handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
         (&Method::GET, "/rolldice") => {
             let random_number = rand::thread_rng().gen_range(1..7);
             *response.body_mut() = Body::from(format!("{random_number}\n"));
+            tracing::info!("rolled {random_number}");
         }
         _ => {
             *response.status_mut() = StatusCode::NOT_FOUND;
+            tracing::error!(path = req.uri().path(), "unknown path")
         }
     };
 
